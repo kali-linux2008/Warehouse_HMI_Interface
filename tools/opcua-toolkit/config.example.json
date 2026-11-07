@@ -1,0 +1,8 @@
+{
+  "endpoint": "opc.tcp://192.168.0.1:4840",
+  "security_policy": "Basic256Sha256",
+  "security_mode": "SignAndEncrypt",
+  "browse_max_nodes": 1500,
+  "browse_max_depth": 8,
+  "output_file": "plc_nodes.txt"
+}
