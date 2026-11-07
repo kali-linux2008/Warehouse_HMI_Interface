@@ -1,10 +1,11 @@
 {
-  "name": "Magazijn Bestellen",
-  "short_name": "Magazijn",
+  "name": "Warehouse Control Center",
+  "short_name": "Warehouse",
+  "description": "Industrieel magazijnbeheer en ordermonitoring",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#23272B",
-  "theme_color": "#23272B",
+  "background_color": "#0d141c",
+  "theme_color": "#111820",
   "icons": [{"src": "/static/icoon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
 }
