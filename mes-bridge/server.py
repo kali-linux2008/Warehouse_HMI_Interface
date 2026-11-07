@@ -224,17 +224,12 @@ async def registreren(request):
         limiet.mislukt(ip)
         return fout(409, "Deze gebruikersnaam is al in gebruik.")
     try:
-        gid = db.maak_gebruiker(naam, await asyncio.to_thread(bv.hash_wachtwoord, wachtwoord), "klant", klantnaam)
+        gid = db.maak_gebruiker(naam, await asyncio.to_thread(bv.hash_wachtwoord, wachtwoord), "klant", klantnaam, actief=False)
     except sqlite3.IntegrityError:
         return fout(409, "Deze gebruikersnaam is al in gebruik.")
-    db.login_ok(gid)
-    g = db.gebruiker(gid)
-    token, csrf = bv.nieuw_token(), bv.nieuw_token()
-    db.maak_sessie(bv.token_hash(token), gid, csrf, IDLE_S, MAX_S)
-    db.audit(ip, naam, f"zelfregistratie klantaccount voor {klantnaam}")
-    resp = web.json_response({"ok": True, "gebruiker": publieke_gebruiker(g), "csrf": csrf}, status=201)
-    resp.set_cookie("sessie", token, httponly=True, samesite="Strict", secure=request.secure, max_age=MAX_S, path="/")
-    return resp
+    limiet.mislukt(ip)  # begrens ook succesvolle registraties per IP
+    db.audit(ip, naam, f"zelfregistratie klantaccount wacht op goedkeuring voor {klantnaam}")
+    return web.json_response({"ok": True, "in_afwachting": True}, status=201)
 
 
 @routes.post("/api/logout")
