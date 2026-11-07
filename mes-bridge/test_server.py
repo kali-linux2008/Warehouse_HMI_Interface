@@ -65,6 +65,13 @@ async def main():
         r = await anoniem.get("/")
         check("default-src 'self'" in r.headers.get("Content-Security-Policy", "")
               and r.headers.get("X-Frame-Options") == "DENY", "beveiligingsheaders aanwezig")
+        r = await anoniem.get("/klant")
+        check(r.status == 200 and "Customer Portal" in await r.text(), "aparte klantportal beschikbaar")
+        r = await anoniem.post("/api/registreren", json={"naam": "zelfklant", "bedrijfsnaam": "Klant Zelf",
+                                                         "wachtwoord": WW, "rol": "beheerder"})
+        check(r.status == 201 and (await r.json())["in_afwachting"], "zelfregistratie maakt account in afwachting aan")
+        nieuw = db.gebruiker_op_naam("zelfklant")
+        check(nieuw["rol"] == "klant" and not nieuw["actief"], "zelfregistratie kan geen beheerder maken en blijft geblokkeerd")
         s, d = await login(anoniem, "noord", "fout-wachtwoord")
         check(s == 401 and "onjuiste" in d["fout"], "fout wachtwoord geweigerd")
         s, d = await login(anoniem, "bestaat-niet", "x")
@@ -139,6 +146,10 @@ async def main():
         print("Beheer en blokkeren")
         s, d = await login(beheer, "beheer")
         hb = {"X-CSRF-Token": d["csrf"]}
+        r = await beheer.post(f"/api/gebruikers/{nieuw['id']}/actief", json={"actief": True}, headers=hb)
+        check(r.status == 200, "beheerder keurt zelfregistratie goed")
+        s, d = await login(anoniem, "zelfklant")
+        check(s == 200 and d["gebruiker"]["rol"] == "klant", "goedgekeurde zelfregistratie kan inloggen")
         r = await beheer.post("/api/gebruikers", json={"naam": "west", "rol": "klant", "klantnaam": "Klant West",
                                                         "wachtwoord": "kort"}, headers=hb)
         check(r.status == 422, "te kort wachtwoord geweigerd")
