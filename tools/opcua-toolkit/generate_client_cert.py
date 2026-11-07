@@ -20,14 +20,16 @@ async def main():
     hostname = socket.gethostname()
 
     if key.exists() or cert.exists():
-        answer = input("A client certificate already exists. Replace it? This requires re-importing the new .der in TIA Portal (y/N): ")
+        answer = input(
+            "A client certificate already exists. Replace it? "
+            "This requires re-importing the new .der in TIA Portal (y/N): "
+        )
         if answer.strip().lower() != "y":
             print("Cancelled; existing certificate retained.")
             return
 
     client = Client(endpoint(), timeout=10)
     client.application_uri = f"urn:{hostname}:WarehouseMES:OPCUAClient"
-    await client.set_security_string if False else asyncio.sleep(0)
 
     await client.setup_self_signed_certificate(
         key,
