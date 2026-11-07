@@ -15,7 +15,8 @@ MES-systeem      ──HTTPS + API-sleutel──▶ ┘
 | `plc.py` | OPC UA-koppeling met DB `"Mes"` en synchronisatie met de database |
 | `db.py` | SQLite: gebruikers, sessies, API-sleutels, orders, logboek |
 | `beveiliging.py` | wachtwoord-hashing (scrypt), tokens, afremmen van inlogpogingen |
-| `static/` | de app (HTML/CSS/JS, installeerbaar op het beginscherm) |
+| `static/` | de operator-/plannerapp (HTML/CSS/JS) |
+| `customer/` | aparte klantportal met zelfregistratie, catalogus, winkelwagen en ordertracking |
 | `plc_sim.py` | PLC-simulator voor testen zonder PLC |
 | `test_server.py` | test van de hele keten inclusief beveiliging (32 controles) |
 
@@ -30,7 +31,7 @@ python server.py gebruiker --naam beheer --rol beheerder        # vraagt om een 
 python server.py start --plc opc.tcp://192.168.0.1:4840
 ```
 
-Open `http://127.0.0.1:8443` op dezelfde computer. Standaard luistert de server **alleen lokaal**.
+Open `http://127.0.0.1:8443` voor de operatorapp of `http://127.0.0.1:8443/klant` voor de Customer Portal. Standaard luistert de server **alleen lokaal**.
 
 ### Op het netwerk (telefoon) — alleen met HTTPS
 
@@ -48,6 +49,12 @@ installeer `cert.pem` op de telefoon als vertrouwd certificaat, of gebruik
 van buitenaf **zonder poorten open te zetten in de router**.
 
 Op de telefoon: open de site → menu → *Toevoegen aan beginscherm*. Dan werkt het als een app.
+
+## Customer Portal en zelfregistratie
+
+Klanten kunnen via `/klant` zelf een account aanvragen met bedrijfsnaam, gebruikersnaam en wachtwoord. Nieuwe accounts worden **niet direct actief**: een beheerder keurt ze eerst goed via Gebruikersbeheer → Vrijgeven. Zo kunnen onbevestigde registraties niet meteen orders richting de PLC sturen. Er is in deze versie nog geen e-mailverificatie of wachtwoord-reset per e-mail. Registratie is beperkt tot 5 pogingen per IP-adres per 15 minuten.
+
+Na goedkeuring kunnen klanten producten bestellen en uitsluitend hun eigen orders bekijken. De winkelwagen verstuurt per productregel een aparte order (maximaal 50 pallets per productorder).
 
 ## Rollen
 
