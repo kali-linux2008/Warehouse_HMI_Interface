@@ -2,65 +2,42 @@
 
 Windows toolkit for the simulated Siemens S7-1500 OPC UA server used by the Warehouse MES project.
 
-## What it does
+## One-click start
 
-- Creates an isolated Python virtual environment.
-- Installs `asyncua` into that environment.
-- Generates a local MES application certificate and private key.
-- Exports the PLC server certificate from the configured OPC UA endpoint.
-- Tests a secure `Basic256Sha256 + SignAndEncrypt` connection.
-- Browses OPC UA Objects and saves the discovered node tree to `plc_nodes.txt`.
+1. Download and extract this folder (or the ZIP package).
+2. Double-click **START.bat**.
+3. The launcher installs the isolated Python environment, creates or retains the MES client certificate, exports the PLC server certificate, opens the certificate file in Explorer, and guides you through the TIA Portal trust step.
+4. After you have imported the public client certificate into TIA Portal, added it to the CPU's OPC UA Trusted clients list, and compiled/loaded the configuration to PLCSIM if needed, return to the window and press ENTER.
+5. The toolkit tests the secure connection and automatically writes the discovered node tree to plc_nodes.txt.
 
-**Safety:** the supplied scripts are read-only. They do not call OPC UA Write, Call, or PLC control methods. Do not add write operations to this toolkit without a separately reviewed PLC/MES handshake and machine-safety design.
+The installer creates a local Python environment, installs dependencies, and creates config.json from config.example.json. Default endpoint: opc.tcp://192.168.0.1:4840.
 
-## Requirements
+## Why TIA Portal still needs confirmation
 
-- Windows 10/11
-- Python 3.10 or newer available as the Windows `py` launcher
-- Network access to the PLC/PLCSIM OPC UA endpoint
-- TIA Portal configuration that enables OPC UA and trusts the MES client certificate
+Siemens documents importing a client certificate into TIA Portal's global Certificate Manager, adding it to the CPU's Trusted clients list, compiling, and loading the configuration. The toolkit automates certificate generation, export, file opening, connection testing, and browsing. It does not silently change a TIA Portal project or download a PLC configuration. Those engineering/security changes remain an explicit operator action.
 
-Default endpoint: `opc.tcp://192.168.0.1:4840`. Change it in `config.json` if your PLCSIM network uses another address.
+## Security
 
-## Install
+- The supplied OPC UA scripts are read-only. They do not call OPC UA Write, Call, or PLC control methods.
+- Import only certificates/mes-client.der. Never import, upload, email, or commit certificates/mes-client-key.pem.
+- The exported PLC server certificate comes from the endpoint itself. Verify its SHA256 fingerprint through a trusted engineering route before relying on it.
+- The client certificate is generated for the Windows hostname. If the PC hostname changes, regenerate the certificate and re-import the new public certificate.
+- Do not disable certificate validation or switch to an unsecured endpoint to work around errors.
 
-1. Download this folder (or the ZIP package) to your Windows PC.
-2. Open PowerShell in the extracted `opcua-toolkit` folder.
-3. Run:
+## Manual menu
 
-   ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
-   ```
-
-The installer creates `.venv`, installs dependencies, creates `certificates\` and writes a local `config.json`. It does not change TIA Portal or PLC settings.
-
-## First-time setup
-
-1. Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\run-toolkit.ps1`.
-2. Choose **1 - Generate MES client certificate**.
-3. Import `certificates\mes-client.der` into the TIA Portal certificate manager and add it to the CPU's trusted OPC UA clients. Keep `mes-client-key.pem` private; never import or upload it.
-4. Download/load the hardware configuration to PLCSIM if needed.
-5. Choose **2 - Export PLC server certificate**. Verify that the PLC identity and certificate fingerprint are expected before relying on it.
-6. Choose **3 - Test secure connection**.
-7. Choose **4 - Browse PLC nodes**. Output is saved as `plc_nodes.txt`.
-
-The TIA Portal certificate trust steps remain a manual engineering task and are not automated by this installer.
+Run run-toolkit.ps1 to use the individual tools:
+1. Generate MES client certificate
+2. Export PLC server certificate
+3. Test secure OPC UA connection
+4. Browse PLC nodes
+5. Open toolkit folder
 
 ## Files
 
-- `install.ps1`: local environment setup only.
-- `run-toolkit.ps1`: interactive menu.
-- `generate_client_cert.py`: creates a client certificate/key locally.
-- `export_plc_cert.py`: exports the server certificate advertised by the endpoint.
-- `secure_test.py`: verifies secure session and reads the namespace array.
-- `browse_plc.py`: browses Objects and reads visible variables.
-- `config.json`: generated locally; endpoint configuration.
-- `certificates\`: generated locally; never commit private keys or certificates.
-
-## Security notes
-
-- The exported server certificate is obtained from the endpoint; this alone is not independent proof of PLC identity. Verify its fingerprint against a trusted engineering source before trusting it.
-- Client and server application certificates are separate from OPC UA user authentication (Anonymous in the current endpoint discovery).
-- A hostname warning means the client certificate's DNS names do not match the local hostname. Regenerate the client certificate on the target PC and re-import the new public certificate into TIA Portal.
-- Do not disable certificate validation or switch to an unsecured endpoint to work around errors.
-- The current test CPU identity observed in the user's session reported model **CPU 1516-3 PN/DP**, order number **6ES7 516-3AP03-0AB0**. Confirm the intended simulated CPU before using the node list.
+- START.bat: double-click launcher.
+- install.ps1: isolated environment installation.
+- first-run.ps1: first-run workflow and TIA trust handoff.
+- run-toolkit.ps1: interactive menu.
+- Python scripts: certificate generation/export, secure connection test, read-only browse.
+- setup-log.txt: installation and first-run log.
