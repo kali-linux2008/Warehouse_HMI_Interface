@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f7fa"><meta name="description" content="Bestelportaal voor Warehouse klanten">
+<title>Customer Portal · Warehouse</title>
+<link rel="stylesheet" href="/customer-static/portal.css"><script src="/customer-static/portal.js" defer></script>
+</head>
+<body>
+<header class="top"><a class="brand" href="/klant"><span class="brand-icon">W</span><span>WAREHOUSE<small>CUSTOMER PORTAL</small></span></a><div class="top-right"><span id="accountName" class="account-name"></span><button id="logout" class="quiet" hidden>Uitloggen</button></div></header>
+<main>
+<section id="auth" class="auth-layout">
+<div class="intro"><div class="eyebrow">DIRECT ORDERING · LIVE TRACKING</div><h1>Uw magazijn.<br><em>Altijd binnen bereik.</em></h1><p>Bestel eenvoudig uw producten, beheer uw winkelwagen en volg de voortgang van uw orders op één plek.</p><div class="trust"><span>✓ Direct bestellen</span><span>✓ Eigen orderoverzicht</span><span>✓ Veilige klantomgeving</span></div></div>
+<div class="auth-card">
+<div class="auth-switch"><button id="showLogin" class="switch active">Inloggen</button><button id="showRegister" class="switch">Account aanmaken</button></div>
+<form id="loginForm" class="auth-form"><h2>Welkom terug</h2><p>Log in op uw klantaccount.</p><label>Gebruikersnaam<input name="naam" autocomplete="username" required maxlength="32"></label><label>Wachtwoord<input name="wachtwoord" type="password" autocomplete="current-password" required></label><button class="primary">Inloggen <span>→</span></button><div id="loginMessage" class="message" role="alert"></div></form>
+<form id="registerForm" class="auth-form" hidden><h2>Maak uw account</h2><p>Registreer uw bedrijf om direct te kunnen bestellen.</p><label>Bedrijfsnaam<input name="bedrijfsnaam" autocomplete="organization" required minlength="2" maxlength="30" placeholder="Uw bedrijfsnaam"></label><label>Gebruikersnaam<input name="naam" autocomplete="username" required minlength="3" maxlength="32" pattern="[a-z0-9._-]+" placeholder="bijv. bedrijfsnaam"></label><label>Wachtwoord<input name="wachtwoord" type="password" autocomplete="new-password" required minlength="10" maxlength="128" placeholder="Minimaal 10 tekens"></label><button class="primary">Account aanmaken <span>→</span></button><div id="registerMessage" class="message" role="alert"></div><small class="fine">Door te registreren wordt een klantaccount aangemaakt. Gebruik een uniek wachtwoord.</small></form>
+</div>
+</section>
+<section id="portal" hidden>
+<div class="welcome"><div><div class="eyebrow">CUSTOMER AREA</div><h1>Goedendag, <span id="customerCompany">klant</span></h1><p>Bestel uw producten en houd uw magazijnorders in de gaten.</p></div><div class="welcome-tag"><i></i> Klantomgeving</div></div>
+<nav class="nav"><button class="nav-btn active" data-view="shop">Producten bestellen</button><button class="nav-btn" data-view="orders">Mijn bestellingen <span id="orderCount" class="count">0</span></button></nav>
+<div id="shopView" class="shop-layout">
+<section><div class="section-head"><div><div class="eyebrow">PRODUCT CATALOGUE</div><h2>Productcatalogus</h2><p>Kies de gewenste producten en aantallen.</p></div><span class="catalog-tag">4 producttypen</span></div><div id="products" class="products"><div class="loading">Producten laden…</div></div></section>
+<aside class="cart"><div class="cart-head"><div><div class="eyebrow">YOUR ORDER</div><h2>Winkelwagen</h2></div><span id="cartBadge" class="cart-badge">0</span></div><div id="cartItems" class="cart-items"><p class="empty">Uw winkelwagen is nog leeg.</p></div><div class="cart-foot"><div class="cart-total"><span>Totaal aantal pallets</span><strong id="cartTotal">0</strong></div><button id="checkout" class="primary" disabled>Bestelling plaatsen <span>→</span></button><p id="cartMessage" class="message" role="status"></p><small>Maximaal 50 pallets per productorder. Elke productregel wordt een aparte magazijnorder.</small></div></aside>
+</div>
+<section id="ordersView" hidden><div class="section-head"><div><div class="eyebrow">ORDER HISTORY</div><h2>Mijn bestellingen</h2><p>De actuele status van uw magazijnorders.</p></div><button id="refreshOrders" class="outline">Vernieuwen ↻</button></div><div id="orders" class="orders"><div class="loading">Bestellingen laden…</div></div></section>
+</section>
+</main>
+<footer><span>WAREHOUSE CUSTOMER PORTAL</span><span>Veilige verbinding · MES ORDER PLATFORM</span></footer>
+<div id="toast" role="status" hidden></div>
+</body></html>
