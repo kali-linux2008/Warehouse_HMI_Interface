@@ -93,9 +93,9 @@ class Db:
         return self.q("SELECT id, naam, rol, klantnaam, actief, laatst_ingelogd, geblokkeerd_tot, aangemaakt "
                       "FROM gebruikers ORDER BY naam")
 
-    def maak_gebruiker(self, naam, wachtwoord_hash, rol, klantnaam="") -> int:
-        return self.x("INSERT INTO gebruikers (naam, wachtwoord, rol, klantnaam, aangemaakt) VALUES (?,?,?,?,?)",
-                      (naam, wachtwoord_hash, rol, klantnaam, time.time()))
+    def maak_gebruiker(self, naam, wachtwoord_hash, rol, klantnaam="", actief=True) -> int:
+        return self.x("INSERT INTO gebruikers (naam, wachtwoord, rol, klantnaam, actief, aangemaakt) VALUES (?,?,?,?,?,?)",
+                      (naam, wachtwoord_hash, rol, klantnaam, 1 if actief else 0, time.time()))
 
     def zet_wachtwoord(self, gid, wachtwoord_hash):
         self.x("UPDATE gebruikers SET wachtwoord = ?, mislukt = 0, geblokkeerd_tot = 0 WHERE id = ?",

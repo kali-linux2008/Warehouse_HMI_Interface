@@ -17,6 +17,7 @@ import ipaddress
 import logging
 import pathlib
 import re
+import sqlite3
 import ssl
 import sys
 import time
@@ -29,6 +30,7 @@ from plc import PRODUCT, Plc, sync_lus
 
 HIER = pathlib.Path(__file__).parent
 STATIC = HIER / "static"
+CUSTOMER = HIER / "customer"
 IDLE_S = 30 * 60          # sessie verloopt na 30 min zonder activiteit
 MAX_S = 8 * 3600          # en altijd na 8 uur
 MAX_OPEN_KLANT = 10       # open orders per klant
@@ -157,6 +159,11 @@ async def index(_):
     return web.FileResponse(STATIC / "index.html")
 
 
+@routes.get("/klant")
+async def customer_portal(_):
+    return web.FileResponse(CUSTOMER / "index.html")
+
+
 @routes.get("/manifest.webmanifest")
 async def manifest(_):
     return web.FileResponse(STATIC / "manifest.webmanifest", headers={"Content-Type": "application/manifest+json"})
@@ -190,6 +197,39 @@ async def login(request):
     resp = ok(gebruiker=publieke_gebruiker(g), csrf=csrf)
     resp.set_cookie("sessie", token, httponly=True, samesite="Strict", secure=request.secure, max_age=MAX_S, path="/")
     return resp
+
+
+@routes.post("/api/registreren")
+async def registreren(request):
+    """Publieke zelfregistratie: uitsluitend klantaccounts, nooit planner/beheerder."""
+    db: Db = request.app["db"]
+    limiet: bv.IpLimiet = request.app["registratie_limiet"]
+    ip = request.remote or "?"
+    if not limiet.mag(ip):
+        return fout(429, "te veel registraties vanaf dit netwerk. Probeer het later opnieuw.")
+    data = await json_body(request)
+    naam = str(data.get("naam", "")).strip().lower()
+    klantnaam = str(data.get("bedrijfsnaam", "")).strip()
+    wachtwoord = str(data.get("wachtwoord", ""))
+    if not NAAM_RE.fullmatch(naam):
+        limiet.mislukt(ip)
+        return fout(422, "gebruikersnaam: 3–32 tekens, kleine letters, cijfers, punt, _ of -")
+    if not 2 <= len(klantnaam) <= 30 or not TEKST_RE.fullmatch(klantnaam):
+        limiet.mislukt(ip)
+        return fout(422, "bedrijfsnaam: 2–30 tekens; gebruik letters, cijfers en gangbare leestekens")
+    if probleem := bv.wachtwoord_probleem(wachtwoord):
+        limiet.mislukt(ip)
+        return fout(422, probleem)
+    if db.gebruiker_op_naam(naam):
+        limiet.mislukt(ip)
+        return fout(409, "Deze gebruikersnaam is al in gebruik.")
+    try:
+        gid = db.maak_gebruiker(naam, await asyncio.to_thread(bv.hash_wachtwoord, wachtwoord), "klant", klantnaam, actief=False)
+    except sqlite3.IntegrityError:
+        return fout(409, "Deze gebruikersnaam is al in gebruik.")
+    limiet.mislukt(ip)  # begrens ook succesvolle registraties per IP
+    db.audit(ip, naam, f"zelfregistratie klantaccount wacht op goedkeuring voor {klantnaam}")
+    return web.json_response({"ok": True, "in_afwachting": True}, status=201)
 
 
 @routes.post("/api/logout")
@@ -388,8 +428,10 @@ async def logboek(request):
 def maak_app(db: Db, plc: Plc) -> web.Application:
     app = web.Application(middlewares=[headers_mw, auth_mw], client_max_size=16 * 1024)
     app["db"], app["plc"], app["ip_limiet"] = db, plc, bv.IpLimiet()
+    app["registratie_limiet"] = bv.IpLimiet(max_pogingen=5, venster=900)
     app.add_routes(routes)
     app.router.add_static("/static", STATIC, show_index=False, follow_symlinks=False)
+    app.router.add_static("/customer-static", CUSTOMER, show_index=False, follow_symlinks=False)
 
     async def start_taken(app):
         app["taken"] = [asyncio.create_task(plc.verbind_lus()), asyncio.create_task(sync_lus(plc, db))]
